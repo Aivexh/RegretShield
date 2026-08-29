@@ -1,116 +1,289 @@
-# EEG-Based Alzheimer's Disease Detection
+# 🛡️ RegretShield
 
-**Robust classification of Alzheimer's disease from resting-state EEG, evaluated under strict subject-level protocols.**
+### Predictive Decision Intelligence for E-Commerce Return Prevention
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![scikit--learn](https://img.shields.io/badge/scikit--learn-1.3.0-orange)
+![XGBoost](https://img.shields.io/badge/XGBoost-1.7.6-green)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0-teal)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.25.0-red)
+![SHAP](https://img.shields.io/badge/SHAP-0.42.1-purple)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-Research conducted under the supervision of **Prof. Kang-Ming Chang**, Department of Computer and Communication Engineering, National Kaohsiung University of Science and Technology (NKUST), Taiwan.
+Predicts return risk from pre-purchase behavior, converts that risk into an allow/warn/block decision, and recommends lower-risk alternatives — served via FastAPI, visualized in Streamlit.
+
+**[GitHub](https://github.com/Aivexh/RegretShield)**
 
 ---
 
-## Overview
+## 📸 Dashboard
 
-This repository provides a complete pipeline for classifying Alzheimer's disease (AD) versus healthy controls (HC) using 19-channel resting-state EEG.
+```text
+📸 Preview coming soon — no screenshots currently checked into the repo.
+```
 
-Most published EEG-AD results are evaluated at the **epoch level** — individual short EEG segments are split across training and test sets without regard to which subject they came from. Because segments from the same subject share subject-specific noise, this lets a model partly "recognize" a subject rather than learn disease-relevant patterns, inflating reported accuracy. We measure this effect directly and find it inflates accuracy by roughly **9.4 percentage points** on our data.
-
-To avoid this, every model here is evaluated with **subject-level Leave-One-Subject-Out (LOSO) cross-validation**: no subject's data ever appears in both the training and test sets for the same fold. This is a stricter, more clinically realistic standard than most prior work in this area.
-
-![Model Comparison](docs/images/model_comparison.png)
-*Figure 1 — Baseline models compared against the proposed Hybrid SIR-EEGNet, all under subject-level LOSO.*
+The dashboard (`streamlit_app.py`) renders a live risk gauge, allow/warn/block decision, SHAP risk factors, recommended alternatives, model ROC-AUC/calibration charts, and a return-risk heatmap by category.
 
 ---
 
-## Model: Hybrid SIR-EEGNet
+## Quick Overview
 
-The Hybrid SIR-EEGNet combines three components:
-
-| Component | Role |
-|---|---|
-| **EEGNet backbone** | Learns spatial-temporal features directly from raw EEG signals. |
-| **Relative Band Power (RBP) branch** | Explicitly encodes known clinical EEG biomarkers for AD (band-power ratios), rather than relying on the network to rediscover them from raw signal alone. |
-| **Gradient Reversal Layer (GRL)** | Adds a subject-adversarial training objective, following Ganin et al. (2016), so the shared feature extractor is pushed toward disease-relevant patterns and away from subject-specific artifacts. |
-
-![SIR-EEGNet Architecture](docs/images/sir_eegnet_architecture.png)
-*Figure 2 — The EEGNet stream and RBP branch are concatenated into a shared representation, which feeds two heads: disease classification, and a subject-adversarial GRL head.*
-
-![Confusion Matrices](docs/images/confusion_matrices.png)
-*Figure 3 — Confusion matrices showing prediction performance on AD subjects.*
+|                    |                                      |
+| ------------------ | ------------------------------------ |
+| 🎯 Problem          | Pre-purchase e-commerce return risk  |
+| 🧠 Core             | Behavioral-signal risk classifier    |
+| ⚡ Decision          | Risk score → allow / warn / block    |
+| 🔄 Recommendation   | Lower-risk alternative products      |
+| 📊 Analytics        | Business-impact simulation           |
+| 🚀 API              | FastAPI                              |
+| 🖥️ UI               | Streamlit                            |
 
 ---
 
-## Results
+## ✨ Features
 
-Binary classification on the OpenNeuro **ds004504** dataset (N = 65 subjects), all under subject-level LOSO:
-
-| Model | Accuracy | F1 (weighted) | AD Recall |
-|---|---:|---:|---:|
-| SVM + RBP | 83.1% | 83.0% | 88.9% |
-| EEGNet | 78.5% | — | — |
-| **Hybrid SIR-EEGNet** | 81.5% | 81.3% | 88.9% |
-
-![Leakage Demonstration](docs/images/leakage_demonstration.png)
-*Figure 4 — Accuracy inflation under epoch-level cross-validation compared to subject-level LOSO, on the same data and models.*
-
-The SVM + RBP baseline currently edges out the Hybrid SIR-EEGNet on raw accuracy, while both share the same AD recall. The value of the hybrid model is explored further — including cross-dataset generalization, where subject-invariant features matter more — in the [Results documentation](docs/results.md).
-
-For full metrics, statistical significance tests, and cross-dataset results (FSU, ADSZ), see the [**Results**](docs/results.md) page.
+- **Return Risk Prediction** — models return probability from behavioral + user/product signals.
+- **Risk-Based Intervention** — `InterventionEngine` converts risk into allow/warn/block.
+- **Alternative Recommendation** — surfaces lower-risk products when it intervenes.
+- **Model Comparison** — Logistic Regression, Gradient Boosting, Random Forest evaluated head-to-head.
+- **SHAP Explanations** — per-prediction risk factors (best-effort, falls back to `null`).
+- **FastAPI Inference Service** — `/predict`, `/health`, `/stats`.
+- **Streamlit Dashboard** — live predictions, model metrics, business-impact demo.
 
 ---
 
-## Documentation
+## Architecture
 
-| Page | Contents |
-|---|---|
-| [Methodology](docs/methodology.md) | LOSO evaluation protocol, EEG preprocessing pipeline, and feature extraction details. |
-| [Results](docs/results.md) | Full metrics, statistical tests, and cross-dataset evaluation (FSU, ADSZ). |
-| [Datasets](docs/datasets.md) | Description of the primary dataset (ds004504) and external datasets used for cross-dataset testing. |
+```mermaid
+flowchart LR
+    A[Synthetic Users & Products]
+    B[Feature Engineering]
+    C[Model Training & Comparison]
+    D[Risk Probability]
+    E[Intervention Engine]
+    F[Alternative Recommender]
+    G[FastAPI]
+    H[Streamlit]
+
+    A --> B --> C --> D --> E
+    E --> F
+    E --> G --> H
+```
+
+- `api.py` loads one joblib bundle (`feature_engineer`, `model`, `products`, `users`) built by `train.py`.
+- `InterventionEngine` and `AlternativeRecommender` wrap the model at inference time — the model never returns a decision, only a probability.
+- Streamlit reads training artifacts directly for metrics and calls the live API for predictions.
 
 ---
 
-## Notebooks
+## Tech Stack
 
-The pipeline runs as a sequence of notebooks, each building on the previous:
-
-| # | Notebook | Description |
-|---|---|---|
-| 1 | `01_data_exploration` | Dataset loading, exploratory data analysis, and DTABR biomarker analysis. |
-| 2 | `02_svm_baseline_loso` | SVM + RBP feature baseline, evaluated under strict LOSO. |
-| 3 | `03_eegnet_loso` | EEGNet baseline, evaluated under LOSO. |
-| 4 | `04_sir_eegnet_loso` | Hybrid SIR-EEGNet training and evaluation on ds004504. |
-| 5 | `05_SIREEGNet_CrossDataset_ADSZ` | Hybrid SIR-EEGNet cross-dataset testing on the ADSZ dataset. |
-| 6 | `06_SIREEGNet_CrossDataset_FSU` | Hybrid SIR-EEGNet cross-dataset testing on the FSU dataset. |
+| Category        | Technology                     |
+| ---------------- | -------------------------------- |
+| Language          | Python                            |
+| ML                | scikit-learn, XGBoost             |
+| Explainability    | SHAP                              |
+| Data              | pandas, NumPy                     |
+| API               | FastAPI, Pydantic, Uvicorn        |
+| Dashboard         | Streamlit, Plotly                 |
+| Serialization     | joblib                            |
 
 ---
 
-## Requirements
+## Project Structure
 
-- Python 3.9+
-- MNE-Python, PyTorch, scikit-learn, SciPy, NumPy, pandas, matplotlib, seaborn
-
-```bash
-pip install -r requirements.txt
+```text
+RegretShield/
+├── src/
+│   ├── config.py               # RANDOM_SEED
+│   ├── dataset_generator.py    # synthetic users/products/interactions
+│   ├── feature_engineering.py  # fit/transform pipeline
+│   ├── model.py                # train/evaluate/predict/explain
+│   ├── intervention_engine.py  # decision policy + business simulation
+│   └── recommender.py          # alternative-product scoring
+├── models/                     # saved artifacts, metrics
+├── train.py                    # end-to-end training pipeline
+├── api.py                      # FastAPI service
+├── streamlit_app.py            # dashboard
+└── requirements.txt
 ```
 
 ---
 
-## Citation
+## ML Pipeline
 
-If you use this code, please cite the primary dataset:
+```text
+Synthetic Data → Feature Engineering → Model Training → Evaluation → Risk Probability → Decision Engine
+```
 
-> Miltiadous, A., et al. (2023). *A Dataset of Scalp EEG Recordings of Alzheimer's Disease, Frontotemporal Dementia and Healthy Subjects.* Data, 8(6), 95.
+| Stage      | Implementation                                                                 |
+| ---------- | -------------------------------------------------------------------------------- |
+| Data       | `SyntheticDataGenerator` — 5,000 users, 1,000 products, 50,000 interactions      |
+| Features   | `time_on_page`, `scroll_depth`, `num_images_viewed`, `review_hover_count`, `user_return_rate`, `product_risk_score`, `engagement_score` |
+| Models     | Logistic Regression, Gradient Boosting, Random Forest, XGBoost                   |
+| Evaluation | Stratified 80/20 split, ROC-AUC, precision/recall @ 0.6, calibration curve       |
+| Output     | Return probability → `InterventionEngine`                                        |
 
 ---
 
-## Acknowledgements
+## Model Results
 
-This research was conducted at the Department of Computer and Communication Engineering, National Kaohsiung University of Science and Technology (NKUST), Taiwan.
+| Model               | ROC-AUC | Precision |
+| -------------------- | ------: | --------: |
+| Logistic Regression   |   0.758 |     0.700 |
+| Gradient Boosting      |   0.758 |     0.710 |
+| Random Forest          |   0.736 |     0.673 |
+
+> **Selected by training pipeline:** Logistic Regression (ROC-AUC 0.758, Precision 0.700, Recall 0.163) — highest test ROC-AUC.
+>
+> **Note:** `api.py` hardcodes inference to `model.predict_proba(X, 'xgboost')`, not `best_model`. The model reported here as "best" is not guaranteed to be the model serving `/predict`. See [Limitations](#limitations).
+
+Top features by importance: `user_return_rate` (5.44), `product_risk_score` (5.03), `low_engagement_flag` (0.40), `avg_scroll_depth` (0.27), `engagement_score` (0.25).
+
+---
+
+## Decision Engine
+
+```text
+              Risk Score
+                  │
+        ┌─────────┼─────────┐
+        ↓         ↓         ↓
+     < 60%     60–85%      > 85%
+        │         │          │
+      ALLOW      WARN      BLOCK
+                  │
+                  ↓
+           RECOMMENDATIONS
+```
+
+- Threshold = `0.6`, set independently in `train.py` and `api.py` (`InterventionEngine(threshold=0.6)`).
+- `evaluate_purchase()` returns `decision`, `warning_message`, `threshold_used`.
+- WARN and BLOCK both trigger `AlternativeRecommender`, scored by the same risk model.
+- `/stats` exposes running intervention counts via `get_stats()`.
+
+---
+
+## ⚡ API
+
+| Method | Endpoint    | Description                       |
+| ------ | ----------- | ------------------------------------ |
+| GET    | `/`          | Root, lists endpoints                |
+| GET    | `/health`    | Health check                         |
+| POST   | `/predict`   | Return-risk prediction + decision    |
+| GET    | `/stats`     | Intervention statistics              |
+| GET    | `/docs`      | Swagger/OpenAPI docs                 |
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 123,
+    "product_id": 456,
+    "time_on_page": 45.5,
+    "scroll_depth": 0.7,
+    "num_images_viewed": 4,
+    "review_hover_count": 3,
+    "add_to_wishlist": 0,
+    "cart_abandonment": 0
+  }'
+```
+
+```json
+{
+  "return_probability": 0.24,
+  "decision": "allow",
+  "warning_message": null,
+  "alternatives": [
+    {"product_id": 789, "category": "electronics", "price": 49.99, "return_risk": 0.18, "rating": 4.5}
+  ],
+  "threshold_used": 0.6
+}
+```
+
+Unknown `user_id`/`product_id` → `404`. Feature-engineering failure → `500`.
+
+---
+
+## Business Impact
+
+| Metric                     |   Value  |
+| ---------------------------- | -------: |
+| Baseline Return Rate          |   26.1%  |
+| Return Rate After Intervention |   23.2%  |
+| Interventions Triggered       |     609  |
+| Estimated Savings             | $14,780  |
+
+**Simulation / Estimated** — computed by `InterventionEngine.simulate_business_impact()` retroactively on the held-out test set. Not a production result.
+
+The Streamlit "Business Impact" panel is a separate, randomly-sampled live demo (`np.random.beta`) for exploring threshold sensitivity — it does not read the numbers above.
+
+---
+
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/Aivexh/RegretShield.git
+cd RegretShield
+
+python -m venv venv
+source venv/bin/activate      # venv\Scripts\activate on Windows
+
+pip install -r requirements.txt
+
+python train.py               # generate data, train, save artifacts
+python api.py                 # http://localhost:8000
+streamlit run streamlit_app.py  # http://localhost:8501
+```
+
+---
+
+## Reproducibility
+
+```text
+1. Install dependencies
+2. python train.py   → generates dataset, trains models, saves models/regret_shield_artifacts.pkl
+3. python api.py      → serves /predict, /health, /stats
+4. streamlit run streamlit_app.py
+```
+
+Seeded via `RANDOM_SEED` in `src/config.py`.
+
+---
+
+## Limitations
+
+- End-to-end synthetic data — no real e-commerce traffic.
+- `api.py` serves XGBoost regardless of which model `train.py` selects as `best_model`.
+- Business-impact numbers are simulated, not production-validated.
+- Recall of 0.163 at threshold 0.6 — most true returns aren't flagged.
+- No automated test suite, auth, or rate limiting.
+
+---
+
+## Roadmap
+
+```text
+- [x] ML risk prediction
+- [x] Decision engine
+- [x] Recommendation layer
+- [x] FastAPI service
+- [x] Streamlit dashboard
+- [ ] api.py serves best_model_name instead of hardcoded xgboost
+- [ ] Shared config-driven threshold
+- [ ] Real interaction data
+- [ ] Automated tests
+- [ ] Production deployment (auth, monitoring, drift detection)
+```
+
+---
 
 ## License
 
-MIT License
+MIT
+
+## Author
+
+**Monika Yadav** — [github.com/Aivexh](https://github.com/Aivexh)
 
 
